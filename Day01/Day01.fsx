@@ -8,27 +8,25 @@ let getInput fileName =
     |> File.ReadAllLines
     |> Array.map int
 
-let countLarger (input: int[]) =
-    input
-    |> Array.pairwise
-    |> Array.countBy (fun (p, n) -> n > p)
-    |> Map.ofArray
-    |> Map.find true
+let countAscending (input: int[]) =
+    Array.pairwise input
+    |> Array.sumBy (fun (p, n) -> if n > p then 1 else 0)
 
 getInput "sample.txt"
-|> countLarger
+|> countAscending
 
 getInput "input.txt"
-|> countLarger
+|> countAscending
 
-let countWindowsLarger (input: int[]) =
+let countWindowedAscending (input: int[]) =
     input
     |> Array.windowed 3
     |> Array.map Array.sum
-    |> countLarger
+    |> countAscending
 
 getInput "sample.txt"
-|> countWindowsLarger
+|> countWindowedAscending
 
 getInput "input.txt"
-|> countWindowsLarger
+|> countWindowedAscending
+
