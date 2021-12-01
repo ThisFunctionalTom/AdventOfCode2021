@@ -9,8 +9,10 @@ let getInput fileName =
     |> Array.map int
 
 let countAscending (input: int[]) =
+    let isAscending (p, n) = n > p
     Array.pairwise input
-    |> Array.sumBy (fun (p, n) -> if n > p then 1 else 0)
+    |> Array.filter isAscending
+    |> Array.length
 
 getInput "sample.txt"
 |> countAscending
