@@ -8,10 +8,10 @@ let parseLine (line: string) =
     let value = int value
     cmd, value
 
-let move1 (hor, depth) = function
-    | "forward", value -> (hor + value, depth)
-    | "down", value -> (hor, depth + value)
-    | "up", value -> (hor, depth - value)
+let move1 (pos, depth) = function
+    | "forward", value -> (pos + value, depth)
+    | "down", value -> (pos, depth + value)
+    | "up", value -> (pos, depth - value)
 
 let readCommands fileName =
     getPath fileName
@@ -26,10 +26,10 @@ let solve1 fileName =
 solve1 "sample.txt" // 150
 solve1 "input.txt" // 2036120
 
-let move2 (hor, depth, aim) = function
-    | "forward", value -> (hor+value, depth+aim*value, aim)
-    | "down", value -> (hor, depth, aim+value)
-    | "up", value -> (hor, depth, aim-value)
+let move2 (pos, depth, aim) = function
+    | "forward", value -> (pos+value, depth+aim*value, aim)
+    | "down", value -> (pos, depth, aim+value)
+    | "up", value -> (pos, depth, aim-value)
 
 let solve2 fileName =
     readCommands fileName
