@@ -3,57 +3,38 @@ open System.IO
 let (</>) p1 p2 = Path.Combine (p1, p2)
 let getPath fileName = __SOURCE_DIRECTORY__ </> fileName
 
-type Position = 
-    {
-        Horizontal: int
-        Depth: int
-    }
-    static member Zero = { Horizontal = 0; Depth = 0 }
+let parseLine (line: string) = 
+    let [|cmd; value|] = line.Split(" ")
+    let value = int value
+    cmd, value
 
-module Position =
-    let toResult pos = pos.Horizontal * pos.Depth
+let move1 (hor, depth) = function
+    | "forward", value -> (hor + value, depth)
+    | "down", value -> (hor, depth + value)
+    | "up", value -> (hor, depth - value)
 
-    let move pos (line: string) =
-        let [|cmd; value|] = line.Split(" ")
-        let value = int value
-        match cmd with
-        | "forward" -> { pos with Horizontal = pos.Horizontal + value }
-        | "down" -> { pos with Depth = pos.Depth + value }
-        | "up" -> { pos with Depth = pos.Depth - value }
+let readCommands fileName =
+    getPath fileName
+    |> File.ReadAllLines
+    |> Array.map parseLine
 
 let solve1 fileName =
-    getPath fileName
-    |> File.ReadAllLines
-    |> Array.fold Position.move Position.Zero
-    |> Position.toResult
+    readCommands fileName
+    |> Array.fold move1 (0, 0)
+    |> fun (hor, depth) -> hor * depth
 
-solve1 "sample.txt"
-solve1 "input.txt"
+solve1 "sample.txt" // 150
+solve1 "input.txt" // 2036120
 
-type PositionWithAim = 
-    {
-        Horizontal: int
-        Depth: int
-        Aim: int
-    }
-    static member Zero = { Horizontal = 0; Depth = 0; Aim = 0 }
-
-module PositionWithAim =
-    let toResult pos = pos.Horizontal * pos.Depth
-
-    let move (pos: PositionWithAim) (line: string) =
-        let [|cmd; value|] = line.Split(" ")
-        let value = int value
-        match cmd with
-        | "forward" -> { pos with Horizontal = pos.Horizontal + value; Depth = pos.Depth + (pos.Aim * value) }
-        | "down" -> { pos with Aim = pos.Aim + value }
-        | "up" -> { pos with Aim = pos.Aim - value }    
+let move2 (hor, depth, aim) = function
+    | "forward", value -> (hor+value, depth+aim*value, aim)
+    | "down", value -> (hor, depth, aim+value)
+    | "up", value -> (hor, depth, aim-value)
 
 let solve2 fileName =
-    getPath fileName
-    |> File.ReadAllLines
-    |> Array.fold PositionWithAim.move PositionWithAim.Zero
-    |> PositionWithAim.toResult
+    readCommands fileName
+    |> Array.fold move2 (0, 0, 0)
+    |> fun (hor, depth, aim) -> hor*depth
 
-solve2 "sample.txt"
-solve2 "input.txt"
+solve2 "sample.txt" // 900
+solve2 "input.txt" // 2015547716
