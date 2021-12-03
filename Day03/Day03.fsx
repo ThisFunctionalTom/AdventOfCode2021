@@ -60,7 +60,7 @@ let someRating ratingFilter (numbers: int[][]) =
     let filter bitPos bitValue (numbers: int[][]) =
         numbers
         |> Array.filter (fun number -> number.[bitPos] = bitValue)
-    
+
     let rec loop numbers bitPos =
         let onesCount = countOnes numbers
         let bitValue = ratingFilter (numbers.Length, onesCount.[bitPos])
@@ -73,16 +73,14 @@ let someRating ratingFilter (numbers: int[][]) =
     loop numbers 0
 
 let oxygenGeneratorRating (numbers: int[][]) =
-    let getFilterValue (numbersCount, onesCount) =
-        match numbers.Length, onesCount with
+    let getFilterValue = function
         | MostOnes -> 1
         | MostZeros -> 0
         | Equal -> 1
     someRating getFilterValue numbers
 
 let co2ScrubberRating (numbers: int[][]) =
-    let getFilterValue (numbersCount, onesCount) =
-        match numbers.Length, onesCount with
+    let getFilterValue = function
         | MostOnes -> 0
         | MostZeros -> 1
         | Equal -> 0
@@ -92,6 +90,7 @@ let solve2 fileName =
     let numbers = read fileName
     let ogr = oxygenGeneratorRating numbers
     let csr = co2ScrubberRating numbers
-    (bitsToNumber ogr), (bitsToNumber csr)
+    (bitsToNumber ogr) * (bitsToNumber csr)
 
 solve2 "sample.txt"
+solve2 "input.txt"
