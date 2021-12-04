@@ -49,9 +49,6 @@ let solve strategy fileName =
     let boardNr, drawIdx, board =
         boards
         |> Array.mapi (fun boardIdx board -> boardIdx+1, getBoardWinIndex draw board, board)
-        |> Array.map (fun (boardNr, drawIdx, board) -> 
-            printfn $"boardNr: {boardNr}, drawIdx: {drawIdx}"
-            boardNr, drawIdx, board)
         |> strategy
     boardNr, drawIdx+1, getBoardScore draw.[..drawIdx] board
 
