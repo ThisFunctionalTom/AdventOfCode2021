@@ -30,41 +30,33 @@ let getBoardWinIndex (draw: int[]) (board: int[][]) =
     |> Array.map (fun row -> getLineWinIndex draw row) 
     |> Array.min
 
-let getWinningBoard (draw: int[]) (boards: int[][][]) =
-    boards
-    |> Array.mapi (fun boardNr board -> boardNr, board, getBoardWinIndex draw board)
-    |> Array.minBy (fun (_, _, winIdx) -> winIdx)
+let getWinningBoard boardResults =
+    boardResults
+    |> Array.minBy (fun (boardNr, drawIdx, board) -> drawIdx)
 
-let solve fileName =
-    let draw, boards = read fileName
-    let boardNr, board, index = getWinningBoard draw boards
+let getLoosingBoard boardResults =
+    boardResults
+    |> Array.maxBy (fun (boardNr, drawIdx, board) -> drawIdx)
 
+let getBoardScore (winningDraws: int[]) (board: int[][]) =
     let unmarked =
-        let drawn = draw.[0..index]
         Array.concat board
-        |> Array.filter (fun nr -> drawn |> Array.contains nr |> not)
+        |> Array.filter (fun nr -> winningDraws |> Array.contains nr |> not)
+    Array.sum unmarked * winningDraws.[^0]
 
-    boardNr+1, index+1, Array.sum unmarked * draw.[index]
+let solve strategy fileName =
+    let draw, boards = read fileName
+    let boardNr, drawIdx, board =
+        boards
+        |> Array.mapi (fun boardIdx board -> boardIdx+1, getBoardWinIndex draw board, board)
+        |> Array.map (fun (boardNr, drawIdx, board) -> 
+            printfn $"boardNr: {boardNr}, drawIdx: {drawIdx}"
+            boardNr, drawIdx, board)
+        |> strategy
+    boardNr, drawIdx+1, getBoardScore draw.[..drawIdx] board
 
-let draw, boards = read "input.txt"
+solve getWinningBoard "sample.txt" // 4512
+solve getWinningBoard "input.txt" // 21607
 
-boards
-|> Array.map (getBoardWinIndex draw)
-|> Array.countBy id
-|> Array.sortBy fst
-
-solve "sample.txt"
-solve "input.txt"
-
-let showBoard (board: string[][]) =
-    for row in board do
-        printfn ""
-        for nr in row do
-            printf "%3s" nr
-    printfn ""
-    printfn ""
-
-showBoard b1
-showBoard (Array.transpose b1)
-
-Array.transpose b1
+solve getLoosingBoard "sample.txt" // 1924
+solve getLoosingBoard "input.txt" // 19012
