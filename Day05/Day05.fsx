@@ -31,20 +31,20 @@ let expand ((x1, y1), (x2, y2)) =
 let isHorizontalOrVertical ((x1, y1), (x2, y2)) = x1 = x2 || y1 = y2
 let isAny _ = true
 
-let solve filter fileName =
+let countOverlaps filter fileName =
     read fileName
     |> Array.filter filter
     |> Array.collect expand
     |> Array.countBy id
+
+let countMultipleOverlaps filter fileName =
+    countOverlaps filter fileName
     |> Array.filter (fun (_, cnt) -> cnt > 1)
     |> Array.length
 
 let show filter fileName =
     let counts =
-        read fileName
-        |> Array.filter filter
-        |> Array.collect expand
-        |> Array.countBy id
+        countOverlaps filter fileName
         |> Array.sortBy fst
         |> Map.ofArray
 
@@ -55,11 +55,7 @@ let show filter fileName =
             | Some cnt -> printf "%d" cnt
         printfn ""
 
-read "sample.txt"
-|> Array.map expand
-|> Array.iter (printfn "%A")
-
-let solve1 fileName = solve isHorizontalOrVertical fileName
+let solve1 fileName = countMultipleOverlaps isHorizontalOrVertical fileName
 
 show isHorizontalOrVertical "sample.txt"
 show isAny "sample.txt"
@@ -67,7 +63,7 @@ show isAny "sample.txt"
 solve1 "sample.txt" // 5
 solve1 "input.txt" // 5167
 
-let solve2 fileName = solve isAny fileName
+let solve2 fileName = countMultipleOverlaps isAny fileName
 
 solve2 "sample.txt" // 12
 solve2 "input.txt" // 17604
