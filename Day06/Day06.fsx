@@ -8,17 +8,23 @@ let read (input: string) =
     |> Array.map int
 
 let solve fish steps =
-    let rec loop steps (fish: (int*bigint)[]) =
-        if steps = 0 
-        then fish |> Array.sumBy snd
-        else
-            fish
-            |> Array.collect (fun (timer, count) ->
-                if timer = 0 
-                then [| (6, count); (8, count) |]
-                else [| timer-1, count |])
+    let rec loop steps (fishes: (int*bigint)[]) =
+        let groupByTimer fishes =
+            fishes
             |> Array.groupBy fst
             |> Array.map (fun (timer, counts) -> timer, counts |> Array.sumBy snd)
+
+        if steps = 0 
+        then fishes |> Array.sumBy snd
+        else
+            [| for (timer, count) in fishes do
+                if timer = 0 
+                then 
+                    yield 6, count
+                    yield 8, count
+                else 
+                    yield timer-1, count |]
+            |> groupByTimer
             |> loop (steps-1)
 
     loop steps (fish |> Array.countBy id |> Array.map (fun (timer, count) -> timer, bigint count))
