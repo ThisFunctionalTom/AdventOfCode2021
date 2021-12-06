@@ -1,5 +1,8 @@
+#load "../Extensions.fsx"
+
 open System
 open System.IO
+open Extensions
 
 let (</>) p1 p2 = Path.Combine (p1, p2)
 let getPath fileName = __SOURCE_DIRECTORY__ </> fileName
@@ -14,9 +17,9 @@ let read fileName =
 
     let draw = lines.[0].Split(',') |> Array.map int
     let boards = 
-        lines.[1..] 
-        |> Array.chunkBySize 6 
-        |> Array.map (Array.skip 1)
+        lines.[1..]
+        |> Array.split [""]
+        |> Array.filter (Array.isEmpty >> not)
         |> Array.map (fun rows -> rows |> Array.map parseRow)
     draw, boards
 
