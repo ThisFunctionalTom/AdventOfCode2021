@@ -7,27 +7,15 @@ let read (input: string) =
     input.Split(',') 
     |> Array.map int
 
-let solve fish steps =
-    let rec loop steps (fishes: (int*bigint)[]) =
-        let groupByTimer fishes =
-            fishes
-            |> Array.groupBy fst
-            |> Array.map (fun (timer, counts) -> timer, counts |> Array.sumBy snd)
-
-        if steps = 0 
-        then fishes |> Array.sumBy snd
-        else
-            [| for (timer, count) in fishes do
-                if timer = 0 
-                then 
-                    yield 6, count
-                    yield 8, count
-                else 
-                    yield timer-1, count |]
-            |> groupByTimer
-            |> loop (steps-1)
-
-    loop steps (fish |> Array.countBy id |> Array.map (fun (timer, count) -> timer, bigint count))
+let solve (input: int[]) (steps: int) =
+    let mutable fishes = Array.zeroCreate 9
+    for f in input do
+        fishes.[f] <- fishes.[f] + 1
+    for i in 1..steps do
+        let zeroCount = fishes.[0]
+        fishes <- Array.append fishes.[1..] [| zeroCount |] // create new lanterns
+        fishes.[6] <- fishes.[6] + zeroCount // add lanternfish which created new ones
+    Array.sum fishes
 
 fsi.AddPrinter(fun (bi: bigint) -> $"{bi.ToString()}I")
 
@@ -36,4 +24,6 @@ solve (read input) 80 // 387413
 
 solve (read sample) 256 // 26984457539I
 solve (read input) 256 // 1738377086345I
+
+
 
