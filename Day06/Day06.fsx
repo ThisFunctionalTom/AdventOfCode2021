@@ -7,6 +7,18 @@ let read (input: string) =
     input.Split(',') 
     |> Array.map int
 
+let solve' (input: int[]) (steps: int) =
+    let repeat n fn = List.init n (fun _ -> fn) |> List.reduce (>>)
+    input 
+    |> Array.countBy id
+    |> Array.fold (fun a (f, c) -> Array.updateAt f (bigint c) a) (Array.zeroCreate 9)
+    |> repeat steps (fun fish ->
+        Array.init 9 <| function
+        | 6 -> fish.[0] + fish.[6+1] 
+        | 8 -> fish.[0] 
+        | i -> fish.[i+1])
+    |> Array.sum
+
 let solve (input: int[]) (steps: int) =
     let mutable fish = Array.zeroCreate 9
     for f in input do
