@@ -8,14 +8,17 @@ let read (input: string) =
     |> Array.map int
 
 let solve (input: int[]) (steps: int) =
-    let mutable fishes = Array.zeroCreate 9
+    let mutable fish = Array.zeroCreate 9
     for f in input do
-        fishes.[f] <- fishes.[f] + 1
+        fish.[f] <- fish.[f] + 1I
+
     for i in 1..steps do
-        let zeroCount = fishes.[0]
-        fishes <- Array.append fishes.[1..] [| zeroCount |] // create new lanterns
-        fishes.[6] <- fishes.[6] + zeroCount // add lanternfish which created new ones
-    Array.sum fishes
+        fish <- 
+            Array.init 9 <| function
+            | 6 -> fish.[0] + fish.[6+1] 
+            | 8 -> fish.[0] 
+            | i -> fish.[i+1]
+    Array.sum fish
 
 fsi.AddPrinter(fun (bi: bigint) -> $"{bi.ToString()}I")
 
@@ -24,6 +27,12 @@ solve (read input) 80 // 387413
 
 solve (read sample) 256 // 26984457539I
 solve (read input) 256 // 1738377086345I
+
+solve' (read sample) 80 // 5934
+solve' (read input) 80 // 387413
+
+solve' (read sample) 256 // 26984457539I
+solve' (read input) 256 // 1738377086345I
 
 
 
