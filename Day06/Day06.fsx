@@ -7,16 +7,18 @@ let read (input: string) =
     input.Split(',') 
     |> Array.map int
 
-let solve' (input: int[]) (steps: int) =
+let solve' (input: int[]) (stepCount: int) =
     let repeat n fn = List.init n (fun _ -> fn) |> List.reduce (>>)
-    input 
-    |> Array.countBy id
-    |> Array.fold (fun a (f, c) -> Array.updateAt f (bigint c) a) (Array.zeroCreate 9)
-    |> repeat steps (fun fish ->
+    let step fish =
         Array.init 9 <| function
         | 6 -> fish.[0] + fish.[6+1] 
         | 8 -> fish.[0] 
-        | i -> fish.[i+1])
+        | i -> fish.[i+1]
+    let initial =
+        input 
+        |> Array.countBy id
+        |> Array.fold (fun a (f, c) -> Array.updateAt f (bigint c) a) (Array.zeroCreate 9)
+    repeat stepCount step initial
     |> Array.sum
 
 let solve (input: int[]) (steps: int) =
