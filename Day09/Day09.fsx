@@ -15,6 +15,11 @@ type 'a ``[,]`` with
     member arr.Range dimension =
         seq { arr.GetLowerBound dimension .. arr.GetUpperBound dimension }
 
+    member arr.Indexes =
+        [ for row in arr.Range 0 do
+            for col in arr.Range 1 do
+                row, col ]
+
 let read fileName =
     let lines =
         getPath fileName
@@ -37,10 +42,9 @@ let isLowPoint (arr: int[,]) (row, col) =
     |> List.forall (fun (r, c) -> arr[r, c] > value)
 
 let lowPoints (arr: int[,]) =
-    [ for row in arr.Range 0 do
-        for col in arr.Range 1 do
-            if isLowPoint arr (row, col) then
-                yield row, col ]
+    [ for row, col in arr.Indexes do
+        if isLowPoint arr (row, col) then
+            yield row, col ]
 
 let solve1 fileName =
     let arr = read fileName
