@@ -32,14 +32,13 @@ solve1 "sample.txt" // 26
 solve1 "input.txt" // 495
 
 let getDigit one four (str: string) =
-    let (|SegCount|_|) count (str: string) =
-        if str.Length = count then Some SegCount else None
-
     let commonSegments s1 s2 =
         (Set.ofSeq s1, Set.ofSeq s2) 
         ||> Set.intersect 
         |> Seq.length
 
+    let (|SegCount|_|) count (str: string) =
+        if str.Length = count then Some SegCount else None
     let (|CommonWith|_|) pat count (str: string) =
         if commonSegments pat str = count then Some CommonWith else None
     let (|CommonWithOne|_|) = (|CommonWith|_|) one
