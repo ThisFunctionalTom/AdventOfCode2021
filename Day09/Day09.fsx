@@ -20,7 +20,7 @@ let read fileName =
         getPath fileName
         |> File.ReadAllLines
     let getValue row col =
-        int (lines[row].Substring(col, 1))
+        int (lines[row].ToString())
     Array2D.init lines.Length lines[0].Length getValue
 
 let neighbors (arr: int[,]) (row, col) =
