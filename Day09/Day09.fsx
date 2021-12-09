@@ -20,7 +20,7 @@ let read fileName =
         getPath fileName
         |> File.ReadAllLines
     let getValue row col =
-        int (lines[row].ToString())
+        int ((lines[row][col]).ToString())
     Array2D.init lines.Length lines[0].Length getValue
 
 let neighbors (arr: int[,]) (row, col) =
@@ -31,11 +31,15 @@ let neighbors (arr: int[,]) (row, col) =
     [ up; down; left; right ]
     |> List.filter arr.IsInRange
 
+let isLowPoint (arr: int[,]) (row, col) =
+    let value = arr[row, col]
+    neighbors arr (row, col) 
+    |> List.forall (fun (r, c) -> arr[r, c] > value)
+
 let lowPoints (arr: int[,]) =
     [ for row in arr.Range 0 do
         for col in arr.Range 1 do
-            let value = arr[row, col]
-            if neighbors arr (row, col) |> List.forall (fun (r, c) -> arr[r, c] > value) then
+            if isLowPoint arr (row, col) then
                 yield row, col ]
 
 let solve1 fileName =
