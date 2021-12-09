@@ -16,7 +16,7 @@ let read (fileName: string) =
     |> File.ReadAllLines
     |> Array.map parseLine
 
-let getDigit (seg: string) =
+let getSimpleDigit (seg: string) =
     match seg.Length with
     | 2 -> Some 1
     | 4 -> Some 4
@@ -26,44 +26,44 @@ let getDigit (seg: string) =
 
 let solve1 fileName =
     read fileName
-    |> Array.sumBy (fun (pattern, output) -> output |> List.choose getDigit |> List.length)
+    |> Array.sumBy (fun (_, output) -> output |> List.choose getSimpleDigit |> List.length)
 
 solve1 "sample.txt" // 26
 solve1 "input.txt" // 495
 
-let intersectCount seg str =
-    Set.ofSeq str 
-    |> Set.intersect (Set.ofSeq seg) 
+let (|SegCount|_|) count (str: string) =
+    if str.Length = count then Some SegCount else None
+
+let commonSegments s1 s2 =
+    (Set.ofSeq s1, Set.ofSeq s2) 
+    ||> Set.intersect 
     |> Seq.length
 
-let getDigit' one four (str: string) =
-    let intersect seg str =
-        Set.ofSeq str 
-        |> Set.intersect (Set.ofSeq seg) 
-        |> Seq.length
+let getDigit one four (str: string) =
+    let (|CommonWith|_|) pat count (str: string) =
+        if commonSegments pat str = count then Some CommonWith else None
 
-    match str.Length, intersectCount one str, intersectCount four str with
-    | 6, 2, 3 -> 0
-    | 2, 2, 2 -> 1
-    | 5, 1, 2 -> 2
-    | 5, 2, 3 -> 3
-    | 4, 2, 4 -> 4
-    | 5, 1, 3 -> 5
-    | 6, 1, 3 -> 6
-    | 3, 2, 2 -> 7
-    | 7, 2, 4 -> 8
-    | 6, 2, 4 -> 9
-    | _ -> failwith "Ooopsi"
-
-fsi.AddPrintTransformer(fun (seg: Set<char>) -> seg |> Set.toArray |> System.String :> obj)
+    match str with
+    | SegCount 2 -> 1
+    | SegCount 4 -> 4
+    | SegCount 3 -> 7
+    | SegCount 7 -> 8
+    | SegCount 5 & CommonWith four 2 -> 2
+    | SegCount 5 & CommonWith one 2 -> 3
+    | SegCount 5 -> 5
+    | SegCount 6 & CommonWith one 1 -> 6
+    | SegCount 6 & CommonWith four 4 -> 9
+    | SegCount 6 -> 0
+    | _ -> failwith "Something went wrong."
 
 let solve2 (pattern: string list, output: string list) =
     let all = List.append pattern output
     let one = all |> List.find (fun str -> str.Length = 2)
     let four = all |> List.find (fun str -> str.Length = 4)
 
-    let [ d1; d2; d3; d4 ] = output |> List.map (getDigit' one four)
-    d1*1000 + d2*100 + d3*10 + d4
+    output 
+    |> List.map (getDigit one four)
+    |> List.fold (fun nr d -> nr*10 + d) 0
 
 read "sample.txt" |> Array.map solve2 |> Array.sum // 61229
 read "input.txt" |> Array.map solve2 |> Array.sum // 1055164
