@@ -31,28 +31,30 @@ let solve1 fileName =
 solve1 "sample.txt" // 26
 solve1 "input.txt" // 495
 
-let (|SegCount|_|) count (str: string) =
-    if str.Length = count then Some SegCount else None
-
-let commonSegments s1 s2 =
-    (Set.ofSeq s1, Set.ofSeq s2) 
-    ||> Set.intersect 
-    |> Seq.length
-
 let getDigit one four (str: string) =
+    let (|SegCount|_|) count (str: string) =
+        if str.Length = count then Some SegCount else None
+
+    let commonSegments s1 s2 =
+        (Set.ofSeq s1, Set.ofSeq s2) 
+        ||> Set.intersect 
+        |> Seq.length
+
     let (|CommonWith|_|) pat count (str: string) =
         if commonSegments pat str = count then Some CommonWith else None
+    let (|CommonWithOne|_|) = (|CommonWith|_|) one
+    let (|CommonWithFour|_|) = (|CommonWith|_|) four
 
     match str with
     | SegCount 2 -> 1
     | SegCount 4 -> 4
     | SegCount 3 -> 7
     | SegCount 7 -> 8
-    | SegCount 5 & CommonWith four 2 -> 2
-    | SegCount 5 & CommonWith one 2 -> 3
+    | SegCount 5 & CommonWithFour 2 -> 2
+    | SegCount 5 & CommonWithOne 2 -> 3
     | SegCount 5 -> 5
-    | SegCount 6 & CommonWith one 1 -> 6
-    | SegCount 6 & CommonWith four 4 -> 9
+    | SegCount 6 & CommonWithOne 1 -> 6
+    | SegCount 6 & CommonWithFour 4 -> 9
     | SegCount 6 -> 0
     | _ -> failwith "Something went wrong."
 
