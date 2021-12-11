@@ -295,3 +295,15 @@ let solve fileName count =
 
 solve "sample.txt" 100 |> printfn "%A" // 1656
 solve "input.txt" 100 |> printfn "%A" // 1571
+
+let solve2 fileName =
+    let octo = read fileName
+
+    let index =
+        Seq.unfold (step >> Some) octo
+        |> Seq.findIndex (fun flashes -> flashes = octo.Length)
+
+    index + 1
+
+solve2 "sample.txt" |> printfn "%A" // 195
+solve2 "input.txt" |> printfn "%A" // 387
