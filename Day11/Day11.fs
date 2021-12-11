@@ -44,28 +44,26 @@ type 'a ``[,]`` with
         |> List.filter arr.IsInRange
 
 let step (octo : int [,]) =
-    let mapIndexes f indexes =
+    let setIndexes f indexes =
         indexes
         |> List.iter (fun (row, col) -> octo.[row, col] <- f (octo.[row, col]))
 
     let isFlashing (row, col) = octo.[row, col] > 9
 
-    let getFlashing () = octo.Indexes |> List.filter isFlashing
+    let getFlashing indexes = indexes |> List.filter isFlashing
 
     let rec loop (toIncrement : (int * int) list) =
         if List.isEmpty toIncrement then
-            let flashing = getFlashing ()
+            let flashing = getFlashing octo.Indexes
 
-            flashing |> mapIndexes (fun _ -> 0)
+            flashing |> setIndexes (fun _ -> 0)
 
             flashing.Length, octo
         else
-            toIncrement |> mapIndexes (fun v -> v + 1)
+            toIncrement |> setIndexes (fun v -> v + 1)
 
             let newFlashes =
-                toIncrement
-                |> List.distinct
-                |> List.filter isFlashing
+                toIncrement |> List.distinct |> getFlashing
 
             let toIncrement' =
                 newFlashes
