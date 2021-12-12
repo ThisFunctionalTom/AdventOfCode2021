@@ -18,12 +18,12 @@ let read fileName : Map<Cave, Cave list> =
     |> Array.map (fun (fromCave, lst) -> fromCave, lst |> Array.map snd |> Array.toList)
     |> Map.ofArray
 
-let (|Start|End|Small|Big|) =
-    function
-    | "start" -> Start
-    | "end" -> End
-    | cave when cave.ToLowerInvariant () = cave -> Small
-    | _ -> Big
+module Cave =
+    let isSmall =
+        function
+        | "start"
+        | "end" -> false
+        | cave -> cave.ToLowerInvariant () = cave
 
 module Path =
     let isComplete =
@@ -38,38 +38,31 @@ module Path =
         |> List.countBy id
         |> List.forall (
             function
-            | Start, cnt -> cnt = 1
-            | End, cnt -> cnt = 1
-            | Small, cnt -> cnt = 1
-            | Big, _ -> true
+            | "start", cnt -> cnt = 1
+            | "end", cnt -> cnt = 1
+            | cave, cnt when Cave.isSmall cave -> cnt = 1
+            | _, _ -> true
         )
 
     let isValid2 (path : Path) =
         let caveCounts = path |> List.countBy id
 
-        let isSmall =
-            function
-            | Small -> true
-            | _ -> false
-
-        let smallCaveCounts =
-            caveCounts |> List.filter (fst >> isSmall)
-
         let caveCountsOk =
             caveCounts
             |> List.forall (
                 function
-                | Start, cnt -> cnt = 1
-                | End, cnt -> cnt = 1
-                | Small, cnt -> cnt <= 2
-                | Big, _ -> true
+                | "start", cnt -> cnt = 1
+                | "end", cnt -> cnt = 1
+                | _, _ -> true
             )
 
-        let smallCaveCountsOk =
-            (smallCaveCounts |> List.sumBy snd)
-            <= smallCaveCounts.Length + 1
+        let smallCaveCountsWithMultipleVisits =
+            caveCounts
+            |> List.filter (fun (cave, cnt) -> Cave.isSmall cave && cnt > 1)
+            |> List.length
 
-        caveCountsOk && smallCaveCountsOk
+        caveCountsOk
+        && smallCaveCountsWithMultipleVisits <= 1
 
 #if INTERACTIVE
 fsi.AddPrinter Path.show
