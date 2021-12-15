@@ -13,6 +13,8 @@ module Char =
 
 type 'a ``[,]`` with
 
+    member arr.Rows = arr.GetUpperBound 0 - arr.GetLowerBound 0 + 1
+    member arr.Cols = arr.GetUpperBound 1 - arr.GetLowerBound 1 + 1
     member arr.Bottom = arr.GetUpperBound 0
     member arr.Right = arr.GetUpperBound 1
     
@@ -77,3 +79,22 @@ let solve fileName =
 
 solve "sample.txt" // 40
 solve "input.txt" // 390
+
+let read2 fileName =
+    let cave = read fileName
+    Array2D.init (cave.Rows*5) (cave.Cols*5) <| fun row col ->
+        let toAdd = col / cave.Cols + row / cave.Rows
+        let value = cave[row%cave.Rows, col%cave.Cols]
+        if value + toAdd > 9 then value + toAdd - 9 else value + toAdd        
+
+let solve2 fileName =
+    read2 fileName |> getMinRiskPath
+
+#if INTERACTIVE
+fsi.AddPrintTransformer(fun (cave: int[,]) ->
+    [ for row in cave.GetLowerBound 0 .. cave.GetUpperBound 0 do
+        cave.[row, *] |> Array.map string |> String.concat "" ] |> String.concat "\n" :> obj)
+#endif
+
+solve2 "sample.txt" // 315
+solve2 "input.txt" // 2822
