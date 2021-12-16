@@ -17,6 +17,10 @@ type 'a ``[,]`` with
     member arr.Cols = arr.GetUpperBound 1 - arr.GetLowerBound 1 + 1
     member arr.Bottom = arr.GetUpperBound 0
     member arr.Right = arr.GetUpperBound 1
+
+    member arr.Neighbors (row, col) =
+        [ row, col-1; row-1, col; row, col+1; row+1, col ]
+        |> List.filter arr.IsInRange 
     
     member arr.IsInRange (r, c) =
         r >= arr.GetLowerBound 0 
@@ -32,53 +36,65 @@ let read fileName =
 
     Array2D.init cave.Length cave[0].Length (fun row col -> cave[row][col])
 
-let endPos (cave: Cave) =
-    (cave.GetUpperBound 0)-1, (cave.GetUpperBound 1)-1
+module String =
+    let inline color colorNr txt = $"\u001b[{colorNr}m{txt}\u001b[0m"
 
-let moves (cave: int[,]) (row, col) =
-    let up = row-1, col
-    let down = row+1, col
-    let left = row, col-1
-    let right = row, col+1
-    [ up; down; left; right ]
-    |> List.filter cave.IsInRange    
+    let inline black txt = color 30 txt
+    let inline red txt = color 31 txt
+    let inline green txt = color 32 txt
+    let inline yellow txt = color 33 txt
+    let inline blue txt = color 34 txt
+    let inline magenta txt = color 35 txt
+    let inline cyan txt = color 36 txt
+    let inline white txt = color 37 txt
 
-let nextMoves (cave: int[,]) (path: Path) : Pos list =
-    match path with
-    | lastPos :: _ ->
-        moves cave lastPos
-        |> List.filter (fun newPos -> not (List.contains newPos path))
-    | [] -> failwith "This is not possible"
+let maxPos lst = lst |> List.reduce (fun (r1, c1) (r2, c2) -> (max r1 r2), (max c1 c2)) 
 
-let endsWith (pos: Pos) (path: Path) =
-    match path with
-    | endPos :: _ -> endPos = pos
-    | _ -> false
+let showRisks (risks: Map<Pos, int>) (changed: Pos list) =
+    let (maxrow, maxcol) = risks |> Map.toList |> List.map fst |> maxPos
+    [ for row in 0 .. maxrow do
+        [ for col in 0 .. maxcol do
+            let changed = changed |> List.contains (row, col)
+            let value = risks |> Map.tryFind (row, col) |> Option.map (sprintf "%03d") |> Option.defaultValue " . "
+            if changed then String.yellow value else value ]
+        |> String.concat " " ] |> String.concat "\n"
 
-let nextMoves' (row, col) =
-    [ if row > 0 then row-1, col 
-      if col > 0 then row, col-1 ]
+let getRisksSeq (cave: Cave) =
+    let getMinRisk risks (row, col) =
+        let minNeighbor = 
+            cave.Neighbors (row, col)
+            |> List.choose (fun np -> Map.tryFind np risks)
+            |> List.min
+        minNeighbor + cave[row, col]
 
-let getMinRiskPath (cave: Cave) =
-    let rec loop minRisks =
-        let next =
-            minRisks 
-            |> List.collect (fun (pos, risk) -> 
-                nextMoves' pos
-                |> List.map (fun (r, c) -> (r, c), risk + cave[r, c]))
-            |> List.groupBy fst
-            |> List.map (fun (pos, risks) -> pos, risks |> List.map snd |> List.min)
-        match next with
-        | [ (0, 0), totalRisk ] -> totalRisk - cave[0, 0]
-        | _ -> loop next
+    let risksUnfolder ((risks: Map<Pos, int>), (changed: Pos list)) =
+        //showRisks risks changed |> printfn "%s"
+        let toUpdate = 
+            changed 
+            |> List.collect cave.Neighbors
+            |> List.distinct
+            |> List.choose (fun (row, col) ->
+                let newMin = getMinRisk risks (row, col)
+                match Map.tryFind (row, col) risks with
+                | None -> Some ((row, col), newMin)
+                | Some currRisk when currRisk > newMin -> Some ((row, col), newMin)
+                | _ -> None)
+        if List.isEmpty toUpdate 
+        then None
+        else
+            let risks' = toUpdate |> List.fold (fun risks (pos, risk) -> Map.add pos risk risks) risks
+            Some (risks', (risks', (toUpdate |> List.map fst)))
 
-    loop [ (cave.Bottom, cave.Right), cave[cave.Bottom, cave.Right] ]
+    Seq.unfold risksUnfolder ((Map.ofList [ (0, 0), cave[0, 0]]), [0, 0])
 
-let solve fileName =
-    read fileName |> getMinRiskPath
+let solveCave cave =
+    let risks = getRisksSeq cave |> Seq.last
+    risks[(cave.Bottom, cave.Right)] - cave[0, 0]
 
-solve "sample.txt" // 40
-solve "input.txt" // 390
+let solve = read >> solveCave
+
+solve "sample.txt" |> printfn "Part1 sample: %d" // 40
+solve "input.txt" |> printfn "Part1 input: %d" // 390
 
 let read2 fileName =
     let cave = read fileName
@@ -87,14 +103,7 @@ let read2 fileName =
         let value = cave[row%cave.Rows, col%cave.Cols]
         if value + toAdd > 9 then value + toAdd - 9 else value + toAdd        
 
-let solve2 fileName =
-    read2 fileName |> getMinRiskPath
+let solve2 = read2 >> solveCave
 
-#if INTERACTIVE
-fsi.AddPrintTransformer(fun (cave: int[,]) ->
-    [ for row in cave.GetLowerBound 0 .. cave.GetUpperBound 0 do
-        cave.[row, *] |> Array.map string |> String.concat "" ] |> String.concat "\n" :> obj)
-#endif
-
-solve2 "sample.txt" // 315
-solve2 "input.txt" // 2822
+solve2 "sample.txt" |> printfn "Part2 sample: %d" // 315
+solve2 "input.txt" |> printfn "Part2 input: %d" // 2814 - 30.813s
