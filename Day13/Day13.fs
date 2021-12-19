@@ -1,4 +1,6 @@
-﻿#if INTERACTIVE
+﻿#nowarn "20"
+#nowarn "25"
+#if INTERACTIVE
 #load "../Extensions.fsx"
 #endif
 
@@ -74,8 +76,8 @@ let solve1 fileName =
 
 let dots, folds = read "sample.txt"
 
-solve1 "sample.txt" |> printfn "%A" // 17
-solve1 "input.txt" |> printfn "%A" // 842
+solve1 "sample.txt" // 17
+solve1 "input.txt" // 842
 
 let solve2 fileName =
     let dots, folds = read fileName

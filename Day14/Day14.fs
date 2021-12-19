@@ -1,4 +1,6 @@
-﻿open System
+﻿#nowarn "20"
+#nowarn "25"
+open System
 open System.IO
 
 let (</>) p1 p2 = Path.Combine (p1, p2)
@@ -76,8 +78,8 @@ fsi.AddPrintTransformer(fun (chars: char[]) -> System.String chars)
 fsi.AddPrintTransformer(fun (count: bigint) -> string count)
 #endif
 
-solve 10 "sample.txt" |> printfn "Sample 10: %A" // 1588
-solve 10 "input.txt" |> printfn "Input 10: %A" // 3143
+solve 10 "sample.txt" // 1588
+solve 10 "input.txt" // 3143
 
-solve 40 "sample.txt" |> printfn "Sample 40: %A" // 2188189693529
-solve 40 "input.txt" |> printfn "Input 40: %A" // 4110215602456
+solve 40 "sample.txt" // 2188189693529
+solve 40 "input.txt" // 4110215602456

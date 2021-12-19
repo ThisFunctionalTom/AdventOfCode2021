@@ -1,4 +1,6 @@
-﻿open System
+﻿#nowarn "20"
+#nowarn "25"
+
 open System.IO
 
 let (</>) p1 p2 = Path.Combine (p1, p2)
@@ -98,14 +100,14 @@ let solve step fileName =
 
 let solve1 = solve (step Path.isValid1)
 
-solve1 "sample.txt" |> printfn "%d" // 10
-solve1 "sample2.txt" |> printfn "%d" // 19
-solve1 "sample3.txt" |> printfn "%d" // 226
-solve1 "input.txt" |> printfn "%d" // 5212
+solve1 "sample.txt" // 10
+solve1 "sample2.txt" // 19
+solve1 "sample3.txt" // 226
+solve1 "input.txt" // 5212
 
 let solve2 = solve (step Path.isValid2)
 
-solve2 "sample.txt" |> printfn "%d" // 36
-solve2 "sample2.txt" |> printfn "%d" // 103
-solve2 "sample3.txt" |> printfn "%d" // 3509
-solve2 "input.txt" |> printfn "%d" // 134862
+solve2 "sample.txt" // 36
+solve2 "sample2.txt" // 103
+solve2 "sample3.txt" // 3509
+solve2 "input.txt" // 134862
