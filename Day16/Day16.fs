@@ -1,4 +1,8 @@
-﻿open System
+﻿#nowarn "40"
+#nowarn "20"
+#nowarn "25"
+
+open System
 open System.IO
 open System.Globalization
 
@@ -86,18 +90,24 @@ module rec Parser =
 
     let pVersion = pInt 3
     let pTypeId = pInt 3
+    let pHeader =
+        parser {
+            let! version = pVersion
+            let! typeId = pTypeId
+            return version, typeId
+        }
 
-    let pLiteral =
+    let pLiteral : Parser<bigint> =
         let rec loop acc =
             parser {
                 let! hasNextGroup = pBool
                 let! groupValue = pInt 4
-                let value = (acc <<< 4) ||| groupValue
+                let value = (acc <<< 4) ||| (bigint groupValue)
                 if hasNextGroup
                 then return! loop value
                 else return value
             }
-        loop 0
+        loop 0I
 
     let pLengthPackets = 
         parser {
@@ -113,7 +123,7 @@ module rec Parser =
             return! pList count packet
         }
 
-    let pOperator =
+    let pItems =
         parser {
             let! lengthTypeId = pInt 1
             return!
@@ -122,20 +132,20 @@ module rec Parser =
                 else pCountPackets
         }
 
+    type Header = int*int
     type Item =
-    | Literal of int
-    | Operator of (int*int*Item) list
+    | Literal of bigint
+    | Items of Packet list
+    and Packet = Header*Item
 
     let packet = 
         parser {
-            let! version = pVersion
-            let! typeId = pTypeId
-
+            let! version, typeId = pHeader
             let! content =
                 match typeId with
                 | 4 -> pLiteral |> map Literal
-                | _ -> pOperator |> map Operator
-            return version, typeId, content
+                | _ -> pItems |> map Items
+            return (version, typeId), content
         }
 
     let parse parser = Seq.map getBits >> String.concat "" >> parser
@@ -143,8 +153,8 @@ module rec Parser =
 open Parser
 
 let rec sumVersions = function
-    | version, _, Literal _ -> version
-    | v1, _, Operator items -> v1 + (items |> List.sumBy sumVersions)
+    | (version, _), Literal _ -> version
+    | (v1, _), Items packets -> v1 + (packets |> List.sumBy sumVersions)
 
 let solve input =
     parse packet input |> fst |> sumVersions
@@ -160,7 +170,43 @@ parse packet "EE00D40C823060"
 |> List.map solve
 |> printfn "%A"
 
-getPath "input.txt" |> File.ReadAllText |> solve |> printfn "%d" // 969
+let input = getPath "input.txt" |> File.ReadAllText 
+solve input // 969
+|> printfn "%d" 
 
+let rec getValue (packet: Packet) =
+    let getValues items : List<bigint> =
+        items |> List.map getValue
+    let mapPair items f =
+        let [x; y] = getValues items
+        f x y
+    let bool2Int b = if b then 1I else 0I
 
+    match packet with
+    | (_, _), Literal value -> value
+    | (_, 0), Items items -> getValues items |> List.sum
+    | (_, 1), Items items -> getValues items |> List.reduce (fun x y -> x*y)
+    | (_, 2), Items items -> getValues items |> List.min
+    | (_, 3), Items items -> getValues items |> List.max
+    | (_, 5), Items items -> mapPair items (fun x y -> bool2Int (x > y))
+    | (_, 6), Items items -> mapPair items (fun x y -> bool2Int (x < y))
+    | (_, 7), Items items -> mapPair items (fun x y -> bool2Int (x = y))
 
+let solve2 input =
+    let p = parse packet input |> fst
+    getValue p
+
+#if INTERACTIVE
+fsi.AddPrintTransformer(fun (x: bigint) -> string x)
+#endif
+
+solve2 "C200B40A82"
+solve2 "04005AC33890"
+solve2 "880086C3E88112"
+solve2 "CE00C43D881120"
+solve2 "D8005AC2A8F0"
+solve2 "F600BC2D8F"
+solve2 "9C005AC2F8F0"
+solve2 "9C0141080250320F1802104A08"
+
+solve2 input // 124921618408
