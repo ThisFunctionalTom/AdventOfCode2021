@@ -29,26 +29,32 @@ let missed (maxX, minY) (x, y) = x > maxX || y < minY
 let inTargetArea (minX, maxX) (minY, maxY) (x, y) =
     x >= minX && x <= maxX && y >= minY && y <= maxY
 
-let solve (minX, maxX) (minY, maxY) =
-    let minVx = int (sqrt (2. * float minX)) - 1
-    let maxVx = maxX + 1
-    let maxVy = -minY
+let doesHitTarget (minX, maxX) (minY, maxY) (vx, vy) =
+    steps step (vx, vy) (0, 0)
+    |> Seq.takeWhile (not << missed (maxX, minY))
+    |> Seq.exists (inTargetArea (minX, maxX) (minY, maxY))
 
+let listAll (minX, maxX) (minY, maxY) (minVx, maxVx) (minVy, maxVy) =
     [ for vx in minVx .. maxVx do
-          for vy in maxVy .. -1 .. 0 do
-              let shotTarget =
-                  steps step (vx, vy) (0, 0)
-                  |> Seq.takeWhile (not << missed (maxX, minY))
-                  |> Seq.exists (inTargetArea (minX, maxX) (minY, maxY))
+          for vy in minVy .. maxVy do
+              let hitsTarget =
+                  doesHitTarget (minX, maxX) (minY, maxY) (vx, vy)
 
-              let maxY = vy * (vy + 1) / 2
-              if shotTarget then yield (vx, vy), maxY ]
+              (vx, vy), hitsTarget ]
+
+let solve (minX, maxX) (minY, maxY) =
+    listAll (minX, maxX) (minY, maxY) (1, maxX + 1) (0, -(minY - 1))
+    |> List.filter snd
+    |> List.map (fun ((vx, vy), _) -> vy * (vy + 1) / 2)
+    |> List.max
 
 // target area: x=96..125, y=-144..-98
-solve (10, 30) (-10, -5)
-|> List.map snd
-|> List.max
+solve (20, 30) (-10, -5)
+solve (96, 125) (-144, -98) // 10296
 
-solve (96, 125) (-144, -98)
-|> List.map snd
-|> List.max
+let solve2 (minX, maxX) (minY, maxY) =
+    listAll (minX, maxX) (minY, maxY) (1, maxX + 1) (minY - 1, -(minY - 1))
+    |> List.filter snd
+
+solve2 (20, 30) (-10, -5) |> List.length
+solve2 (96, 125) (-144, -98) |> List.length // 2371
