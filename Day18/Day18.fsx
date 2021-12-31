@@ -119,3 +119,11 @@ let read fileName =
 
 read "sample.txt" |> solve // 4140
 read "input.txt" |> solve // 4170
+
+let solve2 numbers =
+    Array.allPairs numbers numbers
+    |> Array.map (fun (nr1, nr2) -> add nr1 nr2 |> magnitude)
+    |> Array.max
+
+read "sample.txt" |> solve2 // 3993
+read "input.txt" |> solve2 // 4583
